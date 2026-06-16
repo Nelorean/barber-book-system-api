@@ -37,6 +37,7 @@ Um bom PR para treino deve ter:
 - O nome da branch explica a mudança?
 - O PR tem descrição clara?
 - O projeto compila?
+- O lint e a formatação passam?
 - Os testes relevantes rodam?
 - O README ou Swagger precisa mudar?
 
