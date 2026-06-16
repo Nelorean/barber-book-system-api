@@ -5,12 +5,13 @@
 Objetivo: criar uma base pequena, tipada e fácil de evoluir.
 
 - Inicializar Node.js com TypeScript.
-- Configurar Fastify.
+- Configurar NestJS.
 - Configurar ESLint e Prettier.
 - Adicionar rota `GET /health`.
 - Configurar variáveis de ambiente.
 - Configurar testes automatizados.
 - Configurar Docker para PostgreSQL.
+- Entender a estrutura inicial de módulos, controllers e providers.
 
 ## Fase 2 - Domínio principal
 

@@ -10,7 +10,7 @@ Construir uma API backend/fullstack com TypeScript, PostgreSQL, Prisma, Docker, 
 
 - Node.js
 - TypeScript
-- Fastify
+- NestJS
 - PostgreSQL
 - Prisma
 - Docker
