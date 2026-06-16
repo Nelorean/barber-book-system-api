@@ -2,7 +2,7 @@
 
 Descreva em poucas frases o que este PR entrega.
 
-## Mudancas
+## Mudanças
 
 - 
 
@@ -10,18 +10,18 @@ Descreva em poucas frases o que este PR entrega.
 
 - 
 
-## Decisoes tecnicas
+## Decisões técnicas
 
 Explique escolhas relevantes, trade-offs ou alternativas consideradas.
 
 ## Checklist
 
-- [ ] O escopo do PR esta pequeno.
+- [ ] O escopo do PR está pequeno.
 - [ ] A branch tem nome claro.
 - [ ] O projeto compila.
 - [ ] Os testes relevantes foram executados.
-- [ ] A documentacao foi atualizada quando necessario.
+- [ ] A documentação foi atualizada quando necessário.
 
-## Observacoes para review
+## Observações para review
 
-Pontos especificos onde voce quer feedback do reviewer.
+Pontos específicos onde você quer feedback do reviewer.
