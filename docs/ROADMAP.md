@@ -6,6 +6,7 @@ Objetivo: criar uma base pequena, tipada e fácil de evoluir.
 
 - Inicializar Node.js com TypeScript.
 - Configurar Fastify.
+- Configurar ESLint e Prettier.
 - Adicionar rota `GET /health`.
 - Configurar variáveis de ambiente.
 - Configurar testes automatizados.

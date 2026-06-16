@@ -16,6 +16,8 @@ Construir uma API backend/fullstack com TypeScript, PostgreSQL, Prisma, Docker, 
 - Docker
 - JWT
 - Zod
+- ESLint
+- Prettier
 - Testes automatizados
 - Swagger/OpenAPI
 
