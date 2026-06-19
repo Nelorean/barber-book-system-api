@@ -1,0 +1,76 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserRole {
+  CUSTOMER
+  BARBER
+  ADMIN
+}
+
+enum AppointmentStatus {
+  SCHEDULED
+  CANCELED
+  COMPLETED
+}
+
+enum Weekday {
+  TUESDAY
+  WEDNESDAY
+  THURSDAY
+  FRIDAY
+  SATURDAY
+}
+
+model User {
+  id                   String               @id @default(uuid())
+  name                 String
+  email                String               @unique
+  passwordHash         String               @map("password_hash")
+  phone                String?
+  role                 UserRole             @default(CUSTOMER)
+  customerAppointments Appointment[]        @relation("CustomerAppointments")
+  barberAppointments   Appointment[]        @relation("BarberAppointments")
+  barberAvailabilities BarberAvailability[] @relation("BarberAvailabilities")
+  createdAt            DateTime             @default(now()) @map("created_at")
+  updatedAt            DateTime             @updatedAt @map("updated_at")
+}
+
+model Appointment {
+  id                   String            @id @default(uuid())
+  customerId           String            @map("customer_id")
+  customer             User              @relation("CustomerAppointments", fields: [customerId], references: [id])
+  barberId             String            @map("barber_id")
+  barber               User              @relation("BarberAppointments", fields: [barberId], references: [id])
+  procedureDescription String            @map("procedure_description")
+  startsAt             DateTime          @map("starts_at")
+  endsAt               DateTime          @map("ends_at")
+  status               AppointmentStatus @default(SCHEDULED)
+  createdAt            DateTime          @default(now()) @map("created_at")
+  updatedAt            DateTime          @updatedAt @map("updated_at")
+
+  @@index([customerId])
+  @@index([barberId])
+  @@index([barberId, startsAt])
+}
+
+model BarberAvailability {
+  id        String   @id @default(uuid())
+  barberId  String   @map("barber_id")
+  barber    User     @relation("BarberAvailabilities", fields: [barberId], references: [id])
+  weekday   Weekday
+  startTime String   @map("start_time")
+  endTime   String   @map("end_time")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+}

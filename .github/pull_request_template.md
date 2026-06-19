@@ -4,11 +4,11 @@ Descreva em poucas frases o que este PR entrega.
 
 ## Mudanças
 
-- 
+-
 
 ## Como testar
 
-- 
+-
 
 ## Decisões técnicas
 
