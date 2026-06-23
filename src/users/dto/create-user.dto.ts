@@ -1,8 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { UserRole } from '../../generated/prisma/enums';
 import {
   IsEmail,
-  IsEnum,
   IsNotEmpty,
   IsOptional,
   IsString,
@@ -43,12 +41,4 @@ export class CreateUserDto {
   @Length(10, 11)
   @Matches(/^\d+$/)
   phone?: string;
-
-  @ApiPropertyOptional({
-    enum: UserRole,
-    example: UserRole.CUSTOMER,
-  })
-  @IsOptional()
-  @IsEnum(UserRole)
-  role?: UserRole;
 }
