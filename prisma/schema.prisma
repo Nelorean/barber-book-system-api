@@ -32,19 +32,25 @@ enum Weekday {
   SATURDAY
 }
 
+enum BarberScheduleExceptionType {
+  UNAVAILABLE
+  EXTRA_AVAILABLE
+}
+
 model User {
-  id                   String               @id @default(uuid())
-  name                 String
-  email                String               @unique
-  passwordHash         String               @map("password_hash")
-  phone                String?
-  role                 UserRole             @default(CUSTOMER)
-  customerAppointments Appointment[]        @relation("CustomerAppointments")
-  barberAppointments   Appointment[]        @relation("BarberAppointments")
-  barberAvailabilities BarberAvailability[] @relation("BarberAvailabilities")
-  createdAt            DateTime             @default(now()) @map("created_at")
-  updatedAt            DateTime             @updatedAt @map("updated_at")
-  isActive             Boolean              @default(true) @map("is_active")
+  id                       String                    @id @default(uuid())
+  name                     String
+  email                    String                    @unique
+  passwordHash             String                    @map("password_hash")
+  phone                    String?
+  role                     UserRole                  @default(CUSTOMER)
+  customerAppointments     Appointment[]             @relation("CustomerAppointments")
+  barberAppointments       Appointment[]             @relation("BarberAppointments")
+  barberAvailabilities     BarberAvailability[]      @relation("BarberAvailabilities")
+  barberScheduleExceptions BarberScheduleException[] @relation("BarberScheduleExceptions")
+  createdAt                DateTime                  @default(now()) @map("created_at")
+  updatedAt                DateTime                  @updatedAt @map("updated_at")
+  isActive                 Boolean                   @default(true) @map("is_active")
 }
 
 model Appointment {
@@ -74,4 +80,19 @@ model BarberAvailability {
   endTime   String   @map("end_time")
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
+}
+
+model BarberScheduleException {
+  id        String                      @id @default(uuid())
+  barberId  String                      @map("barber_id")
+  barber    User                        @relation("BarberScheduleExceptions", fields: [barberId], references: [id])
+  type      BarberScheduleExceptionType @default(UNAVAILABLE)
+  startsAt  DateTime                    @map("starts_at")
+  endsAt    DateTime                    @map("ends_at")
+  createdAt DateTime                    @default(now()) @map("created_at")
+  updatedAt DateTime                    @updatedAt @map("updated_at")
+  reason    String?
+
+  @@index([barberId])
+  @@index([barberId, startsAt])
 }
