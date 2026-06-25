@@ -44,6 +44,12 @@ export class BarberAvailabilitiesService {
     return updatedAvailability;
   }
 
+  async findByBarber(barberId: string) {
+    return this.prisma.barberAvailability.findMany({
+      where: { barberId },
+    });
+  }
+
   async remove(id: string) {
     await this.findOne(id);
     const deletedAvailability = await this.prisma.barberAvailability.delete({
