@@ -1,4 +1,9 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateBarberScheduleExceptionDto } from './dto/create-barber-schedule-exception.dto';
 import { UpdateBarberScheduleExceptionDto } from './dto/update-barber-schedule-exception.dto';
 import { PrismaService } from '../prisma/prisma.service';
@@ -20,6 +25,8 @@ export class BarberScheduleExceptionsService {
     if (barber.role === UserRole.CUSTOMER) {
       throw new BadRequestException('User must be a barber or admin');
     }
+    await this.validateScheduleConflict(barberId, startsAt, endsAt);
+
     return this.prisma.barberScheduleException.create({
       data: createBarberScheduleExceptionDto,
     });
@@ -50,6 +57,7 @@ export class BarberScheduleExceptionsService {
     const endsAt = updateBarberScheduleExceptionDto.endsAt ?? schedule.endsAt;
 
     this.validateDateRange(startsAt, endsAt);
+    await this.validateScheduleConflict(schedule.barberId, startsAt, endsAt, id);
 
     const updateSchedule = await this.prisma.barberScheduleException.update({
       where: { id },
@@ -72,6 +80,31 @@ export class BarberScheduleExceptionsService {
 
     if (startDate >= endDate) {
       throw new BadRequestException('startsAt must be before endsAt');
+    }
+  }
+  private async validateScheduleConflict(
+    barberId: string,
+    startsAt: string | Date,
+    endsAt: string | Date,
+    ignoreId?: string,
+  ): Promise<void> {
+    const startDate = new Date(startsAt);
+    const endDate = new Date(endsAt);
+    const where = {
+      barberId,
+      startsAt: { lt: endDate },
+      endsAt: { gt: startDate },
+    };
+    if (ignoreId) {
+      Object.assign(where, {
+        id: { not: ignoreId },
+      });
+    }
+    const conflictingSchedule = await this.prisma.barberScheduleException.findFirst({
+      where,
+    });
+    if (conflictingSchedule) {
+      throw new ConflictException('Schedule exception conflicts with another exception');
     }
   }
 }
