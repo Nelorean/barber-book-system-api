@@ -8,6 +8,13 @@ import { CreateBarberScheduleExceptionDto } from './dto/create-barber-schedule-e
 import { UpdateBarberScheduleExceptionDto } from './dto/update-barber-schedule-exception.dto';
 import { PrismaService } from '../prisma/prisma.service';
 import { UserRole } from '../generated/prisma/enums';
+import type { BarberScheduleException } from '../generated/prisma/client';
+
+type ScheduleExceptionViewer = {
+  sub: string;
+  role: UserRole;
+};
+type PublicBarberScheduleException = Omit<BarberScheduleException, 'reason'>;
 
 @Injectable()
 export class BarberScheduleExceptionsService {
@@ -32,27 +39,37 @@ export class BarberScheduleExceptionsService {
     });
   }
 
-  async findByBarber(barberId: string) {
+  async findByBarber(barberId: string, viewer?: ScheduleExceptionViewer) {
+    const canViewReason = viewer?.role === UserRole.ADMIN || viewer?.sub === barberId;
+    if (canViewReason) {
+      return this.prisma.barberScheduleException.findMany({
+        where: { barberId },
+        orderBy: {
+          startsAt: 'asc',
+        },
+      });
+    }
     return this.prisma.barberScheduleException.findMany({
       where: { barberId },
       orderBy: {
         startsAt: 'asc',
       },
+      omit: { reason: true },
     });
   }
 
-  async findOne(id: string) {
-    const barberSchedule = await this.prisma.barberScheduleException.findUnique({
-      where: { id },
-    });
-    if (!barberSchedule) {
-      throw new NotFoundException();
+  async findOne(id: string, viewer?: ScheduleExceptionViewer) {
+    const barberSchedule = await this.findScheduleOrThrow(id);
+    const canViewReason =
+      viewer?.role === UserRole.ADMIN || viewer?.sub === barberSchedule.barberId;
+    if (canViewReason) {
+      return barberSchedule;
     }
-    return barberSchedule;
+    return this.removeReason(barberSchedule);
   }
 
   async update(id: string, updateBarberScheduleExceptionDto: UpdateBarberScheduleExceptionDto) {
-    const schedule = await this.findOne(id);
+    const schedule = await this.findScheduleOrThrow(id);
     const startsAt = updateBarberScheduleExceptionDto.startsAt ?? schedule.startsAt;
     const endsAt = updateBarberScheduleExceptionDto.endsAt ?? schedule.endsAt;
 
@@ -67,7 +84,7 @@ export class BarberScheduleExceptionsService {
   }
 
   async remove(id: string) {
-    await this.findOne(id);
+    await this.findScheduleOrThrow(id);
     const deletedSchedule = await this.prisma.barberScheduleException.delete({
       where: { id },
     });
@@ -106,5 +123,20 @@ export class BarberScheduleExceptionsService {
     if (conflictingSchedule) {
       throw new ConflictException('Schedule exception conflicts with another exception');
     }
+  }
+  private removeReason(schedule: BarberScheduleException): PublicBarberScheduleException {
+    const { reason, ...publicSchedule } = schedule;
+    void reason;
+
+    return publicSchedule;
+  }
+  private async findScheduleOrThrow(id: string): Promise<BarberScheduleException> {
+    const schedule = await this.prisma.barberScheduleException.findUnique({
+      where: { id },
+    });
+    if (!schedule) {
+      throw new NotFoundException();
+    }
+    return schedule;
   }
 }

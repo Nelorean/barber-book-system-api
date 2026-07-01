@@ -18,6 +18,7 @@ import { BarberScheduleExceptionOwnershipGuard } from '../auth/guards/barber-sch
 type AuthenticatedRequest = Request & {
   user: {
     sub: string;
+    role: UserRole;
   };
 };
 
@@ -41,8 +42,8 @@ export class BarberScheduleExceptionsController {
   @ApiUnauthorizedResponse({ description: 'Token ausente ou invalido' })
   @UseGuards(AuthGuard)
   @Get('barber/:barberId')
-  findByBarber(@Param('barberId') barberId: string) {
-    return this.barberScheduleExceptionsService.findByBarber(barberId);
+  findByBarber(@Param('barberId') barberId: string, @Req() request: AuthenticatedRequest) {
+    return this.barberScheduleExceptionsService.findByBarber(barberId, request.user);
   }
 
   @ApiOperation({ summary: 'Busca minhas excecoes de agenda' })
@@ -53,7 +54,7 @@ export class BarberScheduleExceptionsController {
   @Roles(UserRole.ADMIN, UserRole.BARBER)
   @Get('me')
   findMe(@Req() request: AuthenticatedRequest) {
-    return this.barberScheduleExceptionsService.findByBarber(request.user.sub);
+    return this.barberScheduleExceptionsService.findByBarber(request.user.sub, request.user);
   }
 
   @ApiOperation({ summary: 'Busca excecao especifica de um barbeiro' })
@@ -61,8 +62,8 @@ export class BarberScheduleExceptionsController {
   @ApiUnauthorizedResponse({ description: 'Token ausente ou invalido' })
   @UseGuards(AuthGuard)
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.barberScheduleExceptionsService.findOne(id);
+  findOne(@Param('id') id: string, @Req() request: AuthenticatedRequest) {
+    return this.barberScheduleExceptionsService.findOne(id, request.user);
   }
 
   @ApiOperation({ summary: 'Atualiza a excecao' })
