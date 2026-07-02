@@ -58,8 +58,18 @@ export class BarberAvailabilitiesService {
     const availability = await this.findOne(id);
     const startTime = updateBarberAvailabilityDto.startTime ?? availability.startTime;
     const endTime = updateBarberAvailabilityDto.endTime ?? availability.endTime;
+    const weekdayFinal = updateBarberAvailabilityDto.weekday ?? availability.weekday;
 
     this.validateTimeRange(startTime, endTime);
+    const existingAvailability = await this.prisma.barberAvailability.findFirst({
+      where: {
+        barberId: availability.barberId,
+        weekday: weekdayFinal,
+      },
+    });
+    if (existingAvailability && existingAvailability.id !== id) {
+      throw new ConflictException('Availability already exists for this barber and weekday');
+    }
 
     const updatedAvailability = await this.prisma.barberAvailability.update({
       where: { id },
