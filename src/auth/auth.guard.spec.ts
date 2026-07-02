@@ -1,6 +1,7 @@
 import { AuthGuard } from './guards/jwt-auth.guard';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
+import { PrismaService } from '../prisma/prisma.service';
 
 describe('AuthGuard', () => {
   it('should be defined', () => {
@@ -10,7 +11,12 @@ describe('AuthGuard', () => {
     const configService = {
       get: jest.fn().mockReturnValue('test-secret'),
     } as unknown as ConfigService;
+    const prismaService = {
+      user: {
+        findFirst: jest.fn(),
+      },
+    } as unknown as PrismaService;
 
-    expect(new AuthGuard(jwtService, configService)).toBeDefined();
+    expect(new AuthGuard(jwtService, configService, prismaService)).toBeDefined();
   });
 });
