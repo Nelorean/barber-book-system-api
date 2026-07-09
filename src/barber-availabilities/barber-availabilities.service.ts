@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   ConflictException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -9,11 +10,19 @@ import { UpdateBarberAvailabilityDto } from './dto/update-barber-availability.dt
 import { PrismaService } from '../prisma/prisma.service';
 import { UserRole } from '../generated/prisma/enums';
 
+type AvailabilityViewer = {
+  sub: string;
+  role: UserRole;
+};
+
 @Injectable()
 export class BarberAvailabilitiesService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async create(createBarberAvailabilityDto: CreateBarberAvailabilityDto) {
+  async create(
+    createBarberAvailabilityDto: CreateBarberAvailabilityDto,
+    viewer: AvailabilityViewer,
+  ) {
     const { barberId, weekday, startTime, endTime } = createBarberAvailabilityDto;
     this.validateTimeRange(startTime, endTime);
     const barber = await this.prisma.user.findUnique({
@@ -26,6 +35,7 @@ export class BarberAvailabilitiesService {
     if (barber.role === UserRole.CUSTOMER) {
       throw new BadRequestException('User must be a barber or admin');
     }
+    this.validateCanManageBarber(barberId, viewer);
 
     const existingAvailability = await this.prisma.barberAvailability.findFirst({
       where: { barberId, weekday },
@@ -95,5 +105,15 @@ export class BarberAvailabilitiesService {
     if (startTime >= endTime) {
       throw new BadRequestException('startTime must be before endTime');
     }
+  }
+
+  private validateCanManageBarber(barberId: string, viewer: AvailabilityViewer): void {
+    if (viewer.role === UserRole.ADMIN) {
+      return;
+    }
+    if (viewer.sub === barberId) {
+      return;
+    }
+    throw new ForbiddenException();
   }
 }

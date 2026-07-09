@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   ConflictException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -20,7 +21,10 @@ type PublicBarberScheduleException = Omit<BarberScheduleException, 'reason'>;
 export class BarberScheduleExceptionsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async create(createBarberScheduleExceptionDto: CreateBarberScheduleExceptionDto) {
+  async create(
+    createBarberScheduleExceptionDto: CreateBarberScheduleExceptionDto,
+    viewer: ScheduleExceptionViewer,
+  ) {
     const { barberId, startsAt, endsAt } = createBarberScheduleExceptionDto;
     this.validateDateRange(startsAt, endsAt);
     const barber = await this.prisma.user.findUnique({
@@ -32,6 +36,7 @@ export class BarberScheduleExceptionsService {
     if (barber.role === UserRole.CUSTOMER) {
       throw new BadRequestException('User must be a barber or admin');
     }
+    this.validateCanManageBarber(barberId, viewer);
     await this.validateScheduleConflict(barberId, startsAt, endsAt);
 
     return this.prisma.barberScheduleException.create({
@@ -138,5 +143,15 @@ export class BarberScheduleExceptionsService {
       throw new NotFoundException();
     }
     return schedule;
+  }
+
+  private validateCanManageBarber(barberId: string, viewer: ScheduleExceptionViewer): void {
+    if (viewer.role === UserRole.ADMIN) {
+      return;
+    }
+    if (viewer.sub === barberId) {
+      return;
+    }
+    throw new ForbiddenException();
   }
 }

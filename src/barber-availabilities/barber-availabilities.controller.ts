@@ -1,4 +1,5 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req } from '@nestjs/common';
+import type { Request } from 'express';
 import { BarberAvailabilitiesService } from './barber-availabilities.service';
 import { CreateBarberAvailabilityDto } from './dto/create-barber-availability.dto';
 import { UpdateBarberAvailabilityDto } from './dto/update-barber-availability.dto';
@@ -15,6 +16,13 @@ import { RolesGuard } from '../auth/guards/roles.guard';
 import { UserRole } from '../generated/prisma/enums';
 import { BarberAvailabilityOwnershipGuard } from '../auth/guards/barber-availability-ownership.guard';
 
+type AuthenticatedRequest = Request & {
+  user: {
+    sub: string;
+    role: UserRole;
+  };
+};
+
 @ApiTags('BarberAvailabilities')
 @Controller('barber-availabilities')
 export class BarberAvailabilitiesController {
@@ -27,8 +35,11 @@ export class BarberAvailabilitiesController {
   @UseGuards(AuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN, UserRole.BARBER)
   @Post()
-  create(@Body() createBarberAvailabilityDto: CreateBarberAvailabilityDto) {
-    return this.barberAvailabilitiesService.create(createBarberAvailabilityDto);
+  create(
+    @Body() createBarberAvailabilityDto: CreateBarberAvailabilityDto,
+    @Req() request: AuthenticatedRequest,
+  ) {
+    return this.barberAvailabilitiesService.create(createBarberAvailabilityDto, request.user);
   }
 
   @ApiOperation({ summary: 'Lista todas as disponibilidades' })

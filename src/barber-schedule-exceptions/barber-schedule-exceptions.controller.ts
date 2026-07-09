@@ -33,8 +33,14 @@ export class BarberScheduleExceptionsController {
   @UseGuards(AuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN, UserRole.BARBER)
   @Post()
-  create(@Body() createBarberScheduleExceptionDto: CreateBarberScheduleExceptionDto) {
-    return this.barberScheduleExceptionsService.create(createBarberScheduleExceptionDto);
+  create(
+    @Body() createBarberScheduleExceptionDto: CreateBarberScheduleExceptionDto,
+    @Req() request: AuthenticatedRequest,
+  ) {
+    return this.barberScheduleExceptionsService.create(
+      createBarberScheduleExceptionDto,
+      request.user,
+    );
   }
 
   @ApiOperation({ summary: 'Busca excecoes de agenda de um barbeiro especifico' })
