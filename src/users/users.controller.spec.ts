@@ -3,6 +3,7 @@ import { UsersController } from './users.controller';
 import { UsersService } from './users.service';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
+import { PrismaService } from '../prisma/prisma.service';
 
 describe('UsersController', () => {
   let controller: UsersController;
@@ -31,6 +32,14 @@ describe('UsersController', () => {
           provide: ConfigService,
           useValue: {
             get: jest.fn().mockReturnValue('test-secret'),
+          },
+        },
+        {
+          provide: PrismaService,
+          useValue: {
+            user: {
+              findFirst: jest.fn(),
+            },
           },
         },
       ],
