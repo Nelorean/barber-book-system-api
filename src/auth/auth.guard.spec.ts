@@ -46,7 +46,7 @@ describe('AuthGuard', () => {
     expect(jwtServiceMock.verifyAsync).not.toHaveBeenCalled();
     expect(prismaMock.user.findFirst).not.toHaveBeenCalled();
   });
-  it('should reject requst with invalid token', async () => {
+  it('should reject request with invalid token', async () => {
     const request = {
       headers: {
         authorization: 'Bearer token-invalido',
@@ -83,6 +83,45 @@ describe('AuthGuard', () => {
     });
     prismaMock.user.findFirst.mockResolvedValue(null);
     await expect(guard.canActivate(context)).rejects.toBeInstanceOf(UnauthorizedException);
+    expect(jwtServiceMock.verifyAsync).toHaveBeenCalledWith('token-valido', {
+      secret: 'test-secret',
+    });
+    expect(prismaMock.user.findFirst).toHaveBeenCalledWith({
+      where: {
+        id: 'user-1',
+        isActive: true,
+      },
+    });
+  });
+  it('should allow request with valid token and active user', async () => {
+    const request = {
+      headers: {
+        authorization: 'Bearer token-valido',
+      },
+    };
+    const context = {
+      switchToHttp: jest.fn().mockReturnValue({
+        getRequest: jest.fn().mockReturnValue(request),
+      }),
+    } as unknown as ExecutionContext;
+    jwtServiceMock.verifyAsync.mockResolvedValue({
+      sub: 'user-1',
+      email: 'cliente@email.com',
+      role: UserRole.CUSTOMER,
+    });
+    prismaMock.user.findFirst.mockResolvedValue({
+      id: 'user-1',
+      email: 'cliente@email.com',
+      role: UserRole.CUSTOMER,
+      isActive: true,
+    });
+
+    await expect(guard.canActivate(context)).resolves.toBe(true);
+    expect(request).toHaveProperty('user', {
+      sub: 'user-1',
+      email: 'cliente@email.com',
+      role: UserRole.CUSTOMER,
+    });
     expect(jwtServiceMock.verifyAsync).toHaveBeenCalledWith('token-valido', {
       secret: 'test-secret',
     });
