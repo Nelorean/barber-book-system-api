@@ -3,6 +3,7 @@ import { AuthGuard } from './guards/jwt-auth.guard';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
 import { ExecutionContext, UnauthorizedException } from '@nestjs/common';
+import { UserRole } from '../generated/prisma/enums';
 
 describe('AuthGuard', () => {
   let guard: AuthGuard;
@@ -63,5 +64,33 @@ describe('AuthGuard', () => {
       secret: 'test-secret',
     });
     expect(prismaMock.user.findFirst).not.toHaveBeenCalled();
+  });
+  it('should reject token when user is not active', async () => {
+    const request = {
+      headers: {
+        authorization: 'Bearer token-valido',
+      },
+    };
+    const context = {
+      switchToHttp: jest.fn().mockReturnValue({
+        getRequest: jest.fn().mockReturnValue(request),
+      }),
+    } as unknown as ExecutionContext;
+    jwtServiceMock.verifyAsync.mockResolvedValue({
+      sub: 'user-1',
+      email: 'cliente@email.com',
+      role: UserRole.CUSTOMER,
+    });
+    prismaMock.user.findFirst.mockResolvedValue(null);
+    await expect(guard.canActivate(context)).rejects.toBeInstanceOf(UnauthorizedException);
+    expect(jwtServiceMock.verifyAsync).toHaveBeenCalledWith('token-valido', {
+      secret: 'test-secret',
+    });
+    expect(prismaMock.user.findFirst).toHaveBeenCalledWith({
+      where: {
+        id: 'user-1',
+        isActive: true,
+      },
+    });
   });
 });
