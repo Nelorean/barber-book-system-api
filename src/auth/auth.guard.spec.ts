@@ -45,4 +45,23 @@ describe('AuthGuard', () => {
     expect(jwtServiceMock.verifyAsync).not.toHaveBeenCalled();
     expect(prismaMock.user.findFirst).not.toHaveBeenCalled();
   });
+  it('should reject requst with invalid token', async () => {
+    const request = {
+      headers: {
+        authorization: 'Bearer token-invalido',
+      },
+    };
+    const context = {
+      switchToHttp: jest.fn().mockReturnValue({
+        getRequest: jest.fn().mockReturnValue(request),
+      }),
+    } as unknown as ExecutionContext;
+    jwtServiceMock.verifyAsync.mockRejectedValue(new Error('Invalid token'));
+
+    await expect(guard.canActivate(context)).rejects.toBeInstanceOf(UnauthorizedException);
+    expect(jwtServiceMock.verifyAsync).toHaveBeenCalledWith('token-invalido', {
+      secret: 'test-secret',
+    });
+    expect(prismaMock.user.findFirst).not.toHaveBeenCalled();
+  });
 });
