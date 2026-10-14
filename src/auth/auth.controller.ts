@@ -1,4 +1,4 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, HttpCode, Post } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { ApiOkResponse, ApiOperation, ApiTags, ApiUnauthorizedResponse } from '@nestjs/swagger';
@@ -9,7 +9,8 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('login')
-  @ApiOperation({ summary: 'Realiza logn do usuário' })
+  @HttpCode(200)
+  @ApiOperation({ summary: 'Realiza login do usuário' })
   @ApiOkResponse({ description: 'Login realizado com sucesso' })
   @ApiUnauthorizedResponse({ description: 'Credencias inválidas' })
   login(@Body() loginDto: LoginDto): Promise<unknown> {
